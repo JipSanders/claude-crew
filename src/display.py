@@ -69,6 +69,9 @@ def on_event(kind: str, agent: str, message: str) -> None:
     elif kind == "file":
         console.print(f"       [dim]→ saved[/dim] [dim cyan]workspace/{message}[/dim cyan]")
 
+    elif kind == "reddit":
+        console.print(f"       [dim]→ searching Reddit:[/dim] [dim]{message[:60]}[/dim]")
+
     elif kind == "code":
         console.print(f"       [dim]→ running python snippet[/dim]")
 

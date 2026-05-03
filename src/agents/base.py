@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 import anthropic
+from ..tools import reddit as reddit_tools
 
 MODEL = "claude-sonnet-4-6"
 MAX_TOKENS = 8096
@@ -144,8 +145,9 @@ class BaseAgent:
     color: str = "white"
     emoji: str = "🤖"
 
-    # Subclasses set this to True to include CODE_TOOL
+    # Subclasses set these to True to include optional tool sets
     include_code_tool: bool = False
+    include_reddit_tools: bool = False
 
     def __init__(
         self,
@@ -169,6 +171,8 @@ class BaseAgent:
         t = list(FILE_TOOLS)
         if self.include_code_tool and self.allow_code_execution:
             t.append(CODE_TOOL)
+        if self.include_reddit_tools:
+            t.extend(reddit_tools.REDDIT_TOOLS)
         return t
 
     def _execute_tool(self, name: str, inputs: dict[str, Any]) -> str:
@@ -184,6 +188,9 @@ class BaseAgent:
         if name == "run_python":
             self.on_event("code", self.name, "running python snippet")
             return _run_python(inputs["code"])
+        if name in ("reddit_search", "reddit_get_comments"):
+            self.on_event("reddit", self.name, inputs.get("query") or inputs.get("post_url", ""))
+            return reddit_tools.execute(name, inputs)
         return f"Unknown tool: {name}"
 
     def run(self, task: str, context: str = "") -> AgentResult:
